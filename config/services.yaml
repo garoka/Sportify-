@@ -1,0 +1,38 @@
+# config/services.yaml
+parameters:
+    images_directory: '%kernel.project_dir%/public'
+    translate.api_url: 'https://libretranslate.de/translate'
+    translate.timeout: 3
+    translate.endpoint: '%env(TRANSLATE_ENDPOINT)%'
+
+services:
+    # Configuration par défaut
+    _defaults:
+        autowire: true
+        autoconfigure: true
+
+    # Configuration spécifique pour ApiController
+    App\Controller\ApiController:
+        arguments:
+            $httpClient: '@Symfony\Contracts\HttpClient\HttpClientInterface'
+            $logger: '@Psr\Log\LoggerInterface'
+            $apiUrl: '%translate.api_url%'
+            $translateEndpoint: '%translate.endpoint%'
+            $timeout: '%translate.timeout%'
+
+    # Configuration des repositories
+    App\Repository\JourRepository:
+        tags: ['doctrine.repository_service']
+
+    Dompdf\Dompdf:
+        calls:
+            - method: setPaper
+              arguments: ['A4', 'portrait']
+    # Autowiring pour le reste des services
+    App\:
+        resource: '../src/'
+        exclude:
+            - '../src/DependencyInjection/'
+            - '../src/Entity/'
+            - '../src/Kernel.php'
+            - '../src/Tests/'
